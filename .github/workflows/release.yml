@@ -1,0 +1,75 @@
+name: Release
+
+# Push a tag like v1.0.1 to build signed release APKs and publish them as a GitHub release.
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      XLAUTH_KEYSTORE_BASE64: ${{ secrets.XLAUTH_KEYSTORE_BASE64 }}
+      XLAUTH_KEYSTORE_PASSWORD: ${{ secrets.XLAUTH_KEYSTORE_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require the signing key
+        run: |
+          if [ -z "$XLAUTH_KEYSTORE_BASE64" ] || [ -z "$XLAUTH_KEYSTORE_PASSWORD" ]; then
+            echo "::error::Signing secrets are missing; refusing to publish an unsigned release"
+            exit 1
+          fi
+      - name: Refuse committed signing keys
+        run: |
+          if git ls-files | grep -iE '\.(jks|keystore|p12|pfx)$'; then
+            echo "::error::Keystore files are tracked in the repository"
+            exit 1
+          fi
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+      - name: Set up Android SDK tools
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK 37.2
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-37.2" "build-tools;37.0.0"
+      - name: Set up signing key
+        run: |
+          echo "$XLAUTH_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/xlauth.jks"
+          echo "XLAUTH_KEYSTORE=$RUNNER_TEMP/xlauth.jks" >> "$GITHUB_ENV"
+      - name: Test and build release APKs
+        run: |
+          ./gradlew \
+            -PappVersionName="${GITHUB_REF_NAME#v}" \
+            -PappVersionCode="${{ github.run_number }}" \
+            :phone:testDebugUnitTest :phone:assembleRelease :wear:assembleRelease
+      - name: Verify signatures
+        run: |
+          apksigner="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          for apk in phone/build/outputs/apk/release/phone-release.apk wear/build/outputs/apk/release/wear-release.apk; do
+            "$apksigner" verify "$apk"
+          done
+          phone=$("$apksigner" verify --print-certs phone/build/outputs/apk/release/phone-release.apk | grep "SHA-256 digest")
+          wear=$("$apksigner" verify --print-certs wear/build/outputs/apk/release/wear-release.apk | grep "SHA-256 digest")
+          [ "$phone" = "$wear" ] || { echo "::error::Phone and watch APKs are signed with different keys"; exit 1; }
+      - name: Publish release
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          cp phone/build/outputs/apk/release/phone-release.apk "xl-authenticator-phone-$version.apk"
+          cp wear/build/outputs/apk/release/wear-release.apk "xl-authenticator-watch-$version.apk"
+          gh release create "$GITHUB_REF_NAME" \
+            --title "XL Authenticator $version" \
+            --generate-notes \
+            --notes "Install the phone APK on your phone and the watch APK on your watch (see the README). Both must come from the same release." \
+            "xl-authenticator-phone-$version.apk" \
+            "xl-authenticator-watch-$version.apk"
