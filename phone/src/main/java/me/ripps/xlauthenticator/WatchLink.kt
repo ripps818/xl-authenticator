@@ -26,4 +26,14 @@ object WatchLink {
             runCatching { Tasks.await(messages.sendMessage(node.id, PATH_PROMPT, null), 5, TimeUnit.SECONDS) }
         }
     }
+
+    /** Plain-language outcome of a send, for the screen and notifications. */
+    fun describe(reply: String) = when (reply) {
+        WatchLink.RESULT_SENT -> "Sent."
+        WatchLink.RESULT_NOT_WAITING -> "The PC is on, but XIVLauncher isn't asking for a code."
+        WatchLink.RESULT_UNREACHABLE -> "Couldn't reach the PC. Check the IP, that the launcher's " +
+            "XL Authenticator setting is on, and that the PC's firewall allows port 4646."
+        WatchLink.RESULT_BLOCKED -> "Android blocked the connection. Allow local network access for this app."
+        else -> "Set the key and PC address first."
+    }
 }

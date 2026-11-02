@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Android 17+: needed to connect to the PC on the local network. -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- Auto-prompt only: precise check timing and re-arming after a reboot. -->
@@ -38,6 +39,10 @@
 
         <receiver
             android:name=".ProbeReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".SendActionReceiver"
             android:exported="false" />
 
         <receiver

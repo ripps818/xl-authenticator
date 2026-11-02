@@ -55,6 +55,7 @@ object AutoPrompt {
         val connectivity = context.getSystemService(ConnectivityManager::class.java)
         runCatching { connectivity.unregisterNetworkCallback(networkIntent(context)) }
         context.getSystemService(AlarmManager::class.java).cancel(checkIntent(context))
+        PromptNotification.dismissPrompt(context)
     }
 
     /** Re-arms after a reboot or app update, when registered callbacks and alarms are gone. */
@@ -85,8 +86,11 @@ object AutoPrompt {
         val wasOpen = state.getBoolean("open", false)
         if (result == Sender.Result.ACCEPTED && !wasOpen) {
             runCatching { WatchLink.promptWatches(context) }
+            runCatching { PromptNotification.show(context) }
             state.edit().putLong("prompts", state.getLong("prompts", 0) + 1).apply()
         }
+
+        if (result != Sender.Result.ACCEPTED && wasOpen) PromptNotification.dismissPrompt(context)
 
         val idle = state.getLong("idle_interval", MIN_IDLE_INTERVAL_MS)
         // A blocked probe won't fix itself until the permission is granted; back off like a dead PC.

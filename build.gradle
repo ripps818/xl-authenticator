@@ -18,5 +18,9 @@ allprojects {
     }
 }
 
+// Phone and watch must be signed with the same key for Wear OS to let them talk. CI supplies a
+// fixed key (XLAUTH_KEYSTORE*); without it builds fall back to the local debug key.
+ext.signingValue = { String name -> rootProject.findProperty(name) ?: System.getenv(name) }
+
 ext.appVersionCode = 1
 ext.appVersionName = "1.0.0"

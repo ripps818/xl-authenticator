@@ -131,7 +131,7 @@ class MainActivity : ComponentActivity() {
                         status = "Sending…"
                         scope.launch {
                             val reply = withContext(Dispatchers.IO) { PhoneListenerService.sendCode(store) }
-                            status = describe(reply)
+                            status = WatchLink.describe(reply)
                             sending = false
                         }
                     },
@@ -239,7 +239,17 @@ class MainActivity : ComponentActivity() {
             Switch(checked = enabled, onCheckedChange = {
                 enabled = it
                 store.autoPrompt = it
-                if (it) AutoPrompt.enable(this@MainActivity) else AutoPrompt.disable(this@MainActivity)
+                if (it) {
+                    // Android 13+: the prompt notification needs this runtime permission.
+                    if (Build.VERSION.SDK_INT >= 33 &&
+                        checkSelfPermission(PERMISSION_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        requestPermissions(arrayOf(PERMISSION_NOTIFICATIONS), 1)
+                    }
+                    AutoPrompt.enable(this@MainActivity)
+                } else {
+                    AutoPrompt.disable(this@MainActivity)
+                }
             })
         }
         if (!enabled) return
@@ -281,15 +291,6 @@ class MainActivity : ComponentActivity() {
         TextButton(onClick = { AutoPrompt.clearStats(this); statsTick++ }) { Text("Reset stats") }
     }
 
-    private fun describe(reply: String) = when (reply) {
-        WatchLink.RESULT_SENT -> "Sent."
-        WatchLink.RESULT_NOT_WAITING -> "The PC is on, but XIVLauncher isn't asking for a code."
-        WatchLink.RESULT_UNREACHABLE -> "Couldn't reach the PC. Check the IP, that the launcher's " +
-            "XL Authenticator setting is on, and that the PC's firewall allows port 4646."
-        WatchLink.RESULT_BLOCKED -> "Android blocked the connection. Allow local network access for this app."
-        else -> "Set the key and PC address first."
-    }
-
     private fun describeProbe(name: String) = when (name) {
         Sender.Result.ACCEPTED.name -> "launcher waiting"
         Sender.Result.NOT_WAITING.name -> "PC on, launcher not waiting"
@@ -300,5 +301,6 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val ANDROID_17 = 37
         const val PERMISSION_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+        const val PERMISSION_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
     }
 }

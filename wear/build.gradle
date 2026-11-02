@@ -14,7 +14,21 @@ android {
         versionCode 100000000 + rootProject.ext.appVersionCode
         versionName rootProject.ext.appVersionName
     }
+    signingConfigs {
+        shared {
+            def keystore = rootProject.ext.signingValue("XLAUTH_KEYSTORE")
+            if (keystore) {
+                storeFile file(keystore)
+                storePassword rootProject.ext.signingValue("XLAUTH_KEYSTORE_PASSWORD")
+                keyAlias "xlauth"
+                keyPassword rootProject.ext.signingValue("XLAUTH_KEYSTORE_PASSWORD")
+            }
+        }
+    }
     buildTypes {
+        debug {
+            if (signingConfigs.shared.storeFile) signingConfig signingConfigs.shared
+        }
         release {
             minifyEnabled true
             shrinkResources true
