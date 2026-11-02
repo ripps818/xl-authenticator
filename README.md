@@ -21,13 +21,13 @@ sends `GET /ffxivlauncher/<code>` to that port. Your key never leaves the phone.
 ## Install
 
 1. Download both APKs from the latest [release](../../releases/latest):
-   `xl-authenticator-phone-<version>.apk` and `xl-authenticator-watch-<version>.apk`.
+   `ripps-xl-authenticator-phone-<version>.apk` and `ripps-xl-authenticator-wear-<version>.apk`.
    They must come from the **same release**: Wear OS only lets the phone and watch apps talk
    when both are signed with the same key.
 2. Install the phone APK: open it on the phone and allow installing from that app when asked.
 3. Install the watch APK over wireless debugging:
    ```
-   adb -s <watch-ip:port> install xl-authenticator-watch-<version>.apk
+   adb -s <watch-ip:port> install ripps-xl-authenticator-wear-<version>.apk
    ```
    If your watch shows up twice in `adb devices`, `-s` picks the right one.
 
@@ -73,7 +73,7 @@ Allowing "Alarms & reminders" lets the checks run on time.
   the firewall allows port 4646. The PC must be on the same network as the phone. A VPN on the
   PC must allow local network connections.
 - **"Android blocked the connection":** grant local network access to the phone app in
-  Settings → Apps → XL Authenticator → Permissions.
+  Settings → Apps → XL Authenticator Phone → Permissions.
 - **"The PC is on, but XIVLauncher isn't asking for a code":** open the launcher's 2FA prompt
   first. The port is only open while it is showing.
 - **Watch says the phone isn't connected:** the two apps are signed with different keys, or

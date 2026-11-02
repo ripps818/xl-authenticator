@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">XL Authenticator</string>
+    <string name="app_name">XL Authenticator Wear</string>
     <string name="tile_label">Send 2FA</string>
     <string name="complication_label">Send 2FA code</string>
 </resources>
