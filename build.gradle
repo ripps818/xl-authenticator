@@ -1,0 +1,28 @@
+buildscript {
+    ext.kotlin_version = '2.4.10'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:9.3.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Phone and watch must be signed with the same key for Wear OS to let them talk. CI supplies a
+// fixed key (XLAUTH_KEYSTORE*); without it builds fall back to the local debug key.
+ext.signingValue = { String name -> rootProject.findProperty(name) ?: System.getenv(name) }
+
+// CI passes the tag as the version name and the git commit count as the version code, so every
+// build, debug or release, is newer than the last and installs over it.
+ext.appVersionCode = (rootProject.findProperty("appVersionCode") ?: "1").toInteger()
+ext.appVersionName = rootProject.findProperty("appVersionName") ?: "1.0.0"

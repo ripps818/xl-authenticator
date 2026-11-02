@@ -1,0 +1,67 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+android {
+    namespace 'me.ripps.xlauthenticator'
+    compileSdkVersion "android-37.2"
+    defaultConfig {
+        // Same application ID as the phone app: required for Wear Data Layer messaging.
+        applicationId "me.ripps.xlauthenticator"
+        minSdk 30
+        targetSdk 37
+        // Separate version codes for phone and watch builds of the same app.
+        versionCode 100000000 + rootProject.ext.appVersionCode
+        versionName rootProject.ext.appVersionName
+    }
+    signingConfigs {
+        shared {
+            def keystore = rootProject.ext.signingValue("XLAUTH_KEYSTORE")
+            if (keystore) {
+                storeFile file(keystore)
+                storePassword rootProject.ext.signingValue("XLAUTH_KEYSTORE_PASSWORD")
+                keyAlias "xlauth"
+                keyPassword rootProject.ext.signingValue("XLAUTH_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            if (signingConfigs.shared.storeFile) signingConfig signingConfigs.shared
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            signingConfig signingConfigs.shared.storeFile ? signingConfigs.shared : null
+        }
+    }
+    buildFeatures {
+        compose true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation platform('androidx.compose:compose-bom:2026.08.00')
+    implementation 'androidx.activity:activity-compose:1.13.0'
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.wear.compose:compose-foundation:1.6.2'
+    implementation 'androidx.wear.compose:compose-material3:1.6.2'
+
+    implementation 'androidx.wear.tiles:tiles:1.6.2'
+    implementation 'androidx.wear.protolayout:protolayout:1.4.2'
+    implementation 'androidx.concurrent:concurrent-futures:1.2.0'
+    implementation 'androidx.wear.watchface:watchface-complications-data-source-ktx:1.3.0'
+
+    implementation 'com.google.android.gms:play-services-wearable:18.2.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
+}

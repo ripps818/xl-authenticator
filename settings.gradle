@@ -1,0 +1,3 @@
+rootProject.name = 'xl-authenticator'
+include ':phone'
+include ':wear'
