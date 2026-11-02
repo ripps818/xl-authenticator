@@ -19,7 +19,7 @@ object PromptNotification {
     private const val KEY_PROMPT_SHOWING = "prompt_showing"
 
     /** The launcher's dialog doesn't wait forever; neither should the prompt. */
-    private const val PROMPT_TIMEOUT_MS = 120_000L
+    private const val PROMPT_TIMEOUT_MS = WatchLink.PROMPT_TIMEOUT_MS
     private const val RESULT_TIMEOUT_MS = 5_000L
 
     fun show(context: Context) {
@@ -30,10 +30,10 @@ object PromptNotification {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = builder(context)
-            .setContentTitle("XIVLauncher is waiting")
-            .setContentText("Send your 2FA code to the PC?")
+            .setContentTitle(WatchLink.PROMPT_TITLE)
+            .setContentText(WatchLink.PROMPT_TEXT)
             .setContentIntent(send)
-            .addAction(Notification.Action.Builder(icon(context), "Send", send).build())
+            .addAction(Notification.Action.Builder(icon(context), WatchLink.PROMPT_ACTION, send).build())
             .setAutoCancel(true)
             .setTimeoutAfter(PROMPT_TIMEOUT_MS)
             .build()

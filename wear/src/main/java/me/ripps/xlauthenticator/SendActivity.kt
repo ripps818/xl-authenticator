@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
  * Opened by the app button, the tile, the complication and the login prompt.
  */
 class SendActivity : ComponentActivity() {
-    private val result = mutableStateOf<String?>(null)
+    private val result = mutableStateOf<WatchLink.Outcome?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,8 +49,8 @@ class SendActivity : ComponentActivity() {
                             Text("Sending…")
                         }
                         else -> {
-                            Text(if (r == WatchLink.RESULT_SENT) "✓" else "✗", fontSize = 40.sp)
-                            Text(WatchLink.describe(r), textAlign = TextAlign.Center)
+                            Text(if (r.ok) "✓" else "✗", fontSize = 40.sp)
+                            Text(r.message, textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -60,8 +60,8 @@ class SendActivity : ComponentActivity() {
         lifecycleScope.launch {
             val r = WatchLink.requestSend(applicationContext)
             result.value = r
-            buzz(r == WatchLink.RESULT_SENT)
-            delay(if (r == WatchLink.RESULT_SENT) 1500 else 3500)
+            buzz(r.ok)
+            delay(if (r.ok) 1500 else 3500)
             finish()
         }
     }

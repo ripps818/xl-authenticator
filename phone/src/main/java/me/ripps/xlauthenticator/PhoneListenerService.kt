@@ -10,11 +10,16 @@ import java.util.concurrent.TimeUnit
 class PhoneListenerService : WearableListenerService() {
     override fun onMessageReceived(event: MessageEvent) {
         if (event.path != WatchLink.PATH_SEND) return
-        val reply = sendCode(SecretStore(this))
+        val protocol = WatchLink.watchProtocol(event.data)
+        val code = if (protocol < WatchLink.MIN_WATCH_PROTOCOL) {
+            WatchLink.RESULT_INCOMPATIBLE
+        } else {
+            sendCode(SecretStore(this))
+        }
         runCatching {
             Tasks.await(
                 Wearable.getMessageClient(this)
-                    .sendMessage(event.sourceNodeId, WatchLink.PATH_RESULT, reply.toByteArray()),
+                    .sendMessage(event.sourceNodeId, WatchLink.PATH_RESULT, WatchLink.reply(code)),
                 5, TimeUnit.SECONDS,
             )
         }

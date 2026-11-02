@@ -68,11 +68,20 @@ jobs:
       - name: Publish release
         run: |
           version="${GITHUB_REF_NAME#v}"
+          # Tell people whether the watch app needs reinstalling, since that is the awkward step.
+          prev=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          if [ -z "$prev" ]; then
+            watch="First release: install both the phone and wear APKs."
+          elif git diff --quiet "$prev" HEAD -- wear/; then
+            watch="Watch app unchanged since $prev: keep the one already on your watch and just update the phone."
+          else
+            watch="Watch app changed since $prev: reinstall the wear APK as well as the phone APK."
+          fi
           cp phone/build/outputs/apk/release/phone-release.apk "ripps-xl-authenticator-phone-$version.apk"
           cp wear/build/outputs/apk/release/wear-release.apk "ripps-xl-authenticator-wear-$version.apk"
           gh release create "$GITHUB_REF_NAME" \
             --title "XL Authenticator $version" \
             --generate-notes \
-            --notes "Install the phone APK on your phone and the wear APK on your watch (see the README). Both must come from the same release." \
+            --notes "$watch Both apps must be signed with the same key, which all releases are (see the README)." \
             "ripps-xl-authenticator-phone-$version.apk" \
             "ripps-xl-authenticator-wear-$version.apk"

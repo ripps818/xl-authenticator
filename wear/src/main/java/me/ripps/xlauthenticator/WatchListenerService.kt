@@ -7,11 +7,18 @@ import android.app.PendingIntent
 import android.content.Intent
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
+import org.json.JSONObject
 
 /** Shows the "Send code?" prompt when the phone sees XIVLauncher waiting for 2FA. */
 class WatchListenerService : WearableListenerService() {
     override fun onMessageReceived(event: MessageEvent) {
         if (event.path != WatchLink.PATH_PROMPT) return
+        // The phone decides the wording; these defaults cover older phone apps that send none.
+        val prompt = runCatching { JSONObject(String(event.data ?: ByteArray(0))) }.getOrNull()
+        val title = prompt?.optString("title").orEmpty().ifEmpty { "XIVLauncher is waiting" }
+        val text = prompt?.optString("text").orEmpty().ifEmpty { "Send your 2FA code to the PC?" }
+        val action = prompt?.optString("action").orEmpty().ifEmpty { "Send" }
+        val timeout = prompt?.optLong("timeout_ms", 0L)?.takeIf { it > 0 } ?: PROMPT_TIMEOUT_MS
         val notifications = getSystemService(NotificationManager::class.java)
         notifications.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, "Login prompts", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -25,14 +32,14 @@ class WatchListenerService : WearableListenerService() {
         )
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_send)
-            .setContentTitle("XIVLauncher is waiting")
-            .setContentText("Send your 2FA code to the PC?")
+            .setContentTitle(title)
+            .setContentText(text)
             .setCategory(Notification.CATEGORY_CALL)
             .setContentIntent(send)
-            .addAction(Notification.Action.Builder(null, "Send", send).build())
+            .addAction(Notification.Action.Builder(null, action, send).build())
             .setAutoCancel(true)
             // The launcher's dialog doesn't wait forever; neither should the prompt.
-            .setTimeoutAfter(PROMPT_TIMEOUT_MS)
+            .setTimeoutAfter(timeout)
             .build()
         notifications.notify(PROMPT_NOTIFICATION_ID, notification)
     }

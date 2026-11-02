@@ -35,6 +35,13 @@ New releases install over the old ones and keep your settings. If Android says "
 installed", the app on the device was signed with a different key (for example a build from
 another source). Uninstall it once and install again.
 
+## Updating
+
+Update the phone app by installing the new APK over the old one; your settings stay. The watch
+app is a thin remote and rarely changes. Each release's notes say whether the watch app changed,
+so you only need the `adb` step when they say so. The phone app keeps working with older watch
+apps. If the watch ever says "Update the watch app", install the wear APK from the latest release.
+
 ## Set up
 
 1. In XIVLauncher settings, turn on the XL Authenticator / OTP macro support option.
