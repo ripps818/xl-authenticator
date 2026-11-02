@@ -16,6 +16,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the version code is the commit count.
+          fetch-depth: 0
       - name: Require the signing key
         run: |
           if [ -z "$XLAUTH_KEYSTORE_BASE64" ] || [ -z "$XLAUTH_KEYSTORE_PASSWORD" ]; then
@@ -51,7 +54,7 @@ jobs:
         run: |
           ./gradlew \
             -PappVersionName="${GITHUB_REF_NAME#v}" \
-            -PappVersionCode="${{ github.run_number }}" \
+            -PappVersionCode="$(git rev-list --count HEAD)" \
             :phone:testDebugUnitTest :phone:assembleRelease :wear:assembleRelease
       - name: Verify signatures
         run: |

@@ -17,6 +17,9 @@ jobs:
       XLAUTH_KEYSTORE_PASSWORD: ${{ secrets.XLAUTH_KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the version code is the commit count.
+          fetch-depth: 0
       - name: Refuse committed signing keys
         run: |
           if git ls-files | grep -iE '\.(jks|keystore|p12|pfx)$'; then
@@ -44,7 +47,7 @@ jobs:
           echo "$XLAUTH_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/xlauth.jks"
           echo "XLAUTH_KEYSTORE=$RUNNER_TEMP/xlauth.jks" >> "$GITHUB_ENV"
       - name: Test and build debug APKs
-        run: ./gradlew -PappVersionCode=${{ github.run_number }} :phone:testDebugUnitTest :phone:assembleDebug :wear:assembleDebug
+        run: ./gradlew -PappVersionCode="$(git rev-list --count HEAD)" :phone:testDebugUnitTest :phone:assembleDebug :wear:assembleDebug
       - name: Check phone and watch share a signing key
         run: |
           apksigner="$ANDROID_HOME/build-tools/37.0.0/apksigner"

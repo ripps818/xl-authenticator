@@ -112,8 +112,8 @@ Push a tag to build signed, shrunk release APKs and publish them as a GitHub rel
 git tag v1.0.1 && git push origin v1.0.1
 ```
 
-The tag sets the version name and the CI run number sets the version code, so every build is
-newer than the last. The release workflow refuses to run without the signing secrets.
+The tag sets the version name and the commit count sets the version code, so every build
+(debug or release) is newer than the last. The release workflow refuses to run without the signing secrets.
 
 ## License
 

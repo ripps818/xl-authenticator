@@ -22,7 +22,7 @@ allprojects {
 // fixed key (XLAUTH_KEYSTORE*); without it builds fall back to the local debug key.
 ext.signingValue = { String name -> rootProject.findProperty(name) ?: System.getenv(name) }
 
-// CI passes the tag as the version name and the run number as the version code, so every
-// build is newer than the last and installs over it.
+// CI passes the tag as the version name and the git commit count as the version code, so every
+// build, debug or release, is newer than the last and installs over it.
 ext.appVersionCode = (rootProject.findProperty("appVersionCode") ?: "1").toInteger()
 ext.appVersionName = rootProject.findProperty("appVersionName") ?: "1.0.0"
