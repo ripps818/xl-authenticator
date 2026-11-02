@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -45,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -195,7 +197,15 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun IpSection(store: SecretStore) {
         var input by remember { mutableStateOf(store.ips.joinToString("; ")) }
-        val saved = SecretStore.parseIps(input) == store.ips
+        // State, not a read of the store, so the button updates the moment a save happens.
+        var savedIps by remember { mutableStateOf(store.ips) }
+        val saved = SecretStore.parseIps(input) == savedIps
+        val save = {
+            store.ips = SecretStore.parseIps(input)
+            savedIps = store.ips
+            input = savedIps.joinToString("; ")
+            if (store.autoPrompt) AutoPrompt.enable(this)
+        }
         Text("PC address", style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(
             value = input,
@@ -203,14 +213,11 @@ class MainActivity : ComponentActivity() {
             label = { Text("IP of the PC running XIVLauncher") },
             supportingText = { Text("Separate several with ;") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { if (!saved) save() }),
             modifier = Modifier.fillMaxWidth(),
         )
-        Button(enabled = !saved, onClick = {
-            store.ips = SecretStore.parseIps(input)
-            input = store.ips.joinToString("; ")
-            if (store.autoPrompt) AutoPrompt.enable(this)
-        }) { Text(if (saved) "Saved" else "Save") }
+        Button(enabled = !saved, onClick = { save() }) { Text(if (saved) "Saved" else "Save") }
     }
 
     @Composable
