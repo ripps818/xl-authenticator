@@ -19,6 +19,7 @@ object WatchLink {
     const val RESULT_NOT_WAITING = "not_waiting"
     const val RESULT_UNREACHABLE = "unreachable"
     const val RESULT_NO_SETUP = "no_setup"
+    const val RESULT_BLOCKED = "blocked"
 
     /** Watch-side failures, never sent by the phone. */
     const val RESULT_NO_PHONE = "no_phone"
@@ -60,6 +61,7 @@ object WatchLink {
         RESULT_NOT_WAITING -> "Launcher isn't asking for a code"
         RESULT_UNREACHABLE -> "Phone can't reach the PC"
         RESULT_NO_SETUP -> "Set up the phone app first"
+        RESULT_BLOCKED -> "Allow local network access in the phone app"
         RESULT_NO_PHONE -> "Phone not connected"
         else -> "Phone didn't answer"
     }

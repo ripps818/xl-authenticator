@@ -1,6 +1,7 @@
 package me.ripps.xlauthenticator
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -59,6 +60,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val store = SecretStore(this)
+        // Android 17 blocks connections to LAN devices without this runtime permission.
+        if (Build.VERSION.SDK_INT >= ANDROID_17 &&
+            checkSelfPermission(PERMISSION_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(PERMISSION_LOCAL_NETWORK), 0)
+        }
         setContent {
             val dark = isSystemInDarkTheme()
             MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
@@ -270,13 +277,21 @@ class MainActivity : ComponentActivity() {
     private fun describe(reply: String) = when (reply) {
         WatchLink.RESULT_SENT -> "Sent."
         WatchLink.RESULT_NOT_WAITING -> "The PC is on, but XIVLauncher isn't asking for a code."
-        WatchLink.RESULT_UNREACHABLE -> "Couldn't reach the PC. Check the IP and that you're on the same network."
+        WatchLink.RESULT_UNREACHABLE -> "Couldn't reach the PC. Check the IP, that the launcher's " +
+            "XL Authenticator setting is on, and that the PC's firewall allows port 4646."
+        WatchLink.RESULT_BLOCKED -> "Android blocked the connection. Allow local network access for this app."
         else -> "Set the key and PC address first."
     }
 
     private fun describeProbe(name: String) = when (name) {
         Sender.Result.ACCEPTED.name -> "launcher waiting"
         Sender.Result.NOT_WAITING.name -> "PC on, launcher not waiting"
+        Sender.Result.BLOCKED.name -> "blocked: local network access not allowed"
         else -> "PC not answering"
+    }
+
+    private companion object {
+        const val ANDROID_17 = 37
+        const val PERMISSION_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
     }
 }

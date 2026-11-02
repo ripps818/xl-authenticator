@@ -30,6 +30,7 @@ class PhoneListenerService : WearableListenerService() {
                 Sender.Result.ACCEPTED -> WatchLink.RESULT_SENT
                 Sender.Result.NOT_WAITING -> WatchLink.RESULT_NOT_WAITING
                 Sender.Result.UNREACHABLE -> WatchLink.RESULT_UNREACHABLE
+                Sender.Result.BLOCKED -> WatchLink.RESULT_BLOCKED
             }
         }
     }

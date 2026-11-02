@@ -79,12 +79,7 @@ object AutoPrompt {
         }
 
         val started = SystemClock.elapsedRealtime()
-        val results = ips.map { Sender.probe(it) }
-        val result = when {
-            Sender.Result.ACCEPTED in results -> Sender.Result.ACCEPTED
-            Sender.Result.NOT_WAITING in results -> Sender.Result.NOT_WAITING
-            else -> Sender.Result.UNREACHABLE
-        }
+        val result = Sender.summarize(ips.associateWith { Sender.probe(it) })
 
         val state = context.getSharedPreferences(STATS, Context.MODE_PRIVATE)
         val wasOpen = state.getBoolean("open", false)
@@ -94,12 +89,14 @@ object AutoPrompt {
         }
 
         val idle = state.getLong("idle_interval", MIN_IDLE_INTERVAL_MS)
-        val next = if (result == Sender.Result.UNREACHABLE) idle else ACTIVE_INTERVAL_MS
+        // A blocked probe won't fix itself until the permission is granted; back off like a dead PC.
+        val slow = result == Sender.Result.UNREACHABLE || result == Sender.Result.BLOCKED
+        val next = if (slow) idle else ACTIVE_INTERVAL_MS
         state.edit()
             .putBoolean("open", result == Sender.Result.ACCEPTED)
             .putLong(
                 "idle_interval",
-                if (result == Sender.Result.UNREACHABLE) (idle * 2).coerceAtMost(MAX_IDLE_INTERVAL_MS)
+                if (slow) (idle * 2).coerceAtMost(MAX_IDLE_INTERVAL_MS)
                 else MIN_IDLE_INTERVAL_MS,
             )
             .putLong("probes", state.getLong("probes", 0) + 1)

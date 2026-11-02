@@ -23,6 +23,9 @@ object Sender {
 
         /** The PC didn't answer in time: off, asleep, or not on this network. */
         UNREACHABLE,
+
+        /** Android refused the connection: the app lacks local network access (Android 17+). */
+        BLOCKED,
     }
 
     /** Sends [code] to every IP. Overall success means at least one launcher took it. */
@@ -54,14 +57,22 @@ object Sender {
             Result.NOT_WAITING
         } catch (e: SocketTimeoutException) {
             Result.UNREACHABLE
+        } catch (e: SecurityException) {
+            Result.BLOCKED
         } catch (e: IOException) {
-            // No route to host, network unreachable, bad address, and similar.
-            Result.UNREACHABLE
+            // EPERM is how Android reports a connection denied by local network protection.
+            if (e.message?.contains("EPERM") == true || e.message?.contains("not permitted") == true) {
+                Result.BLOCKED
+            } else {
+                // No route to host, network unreachable, bad address, and similar.
+                Result.UNREACHABLE
+            }
         }
 
     fun summarize(results: Map<String, Result>): Result = when {
         results.values.any { it == Result.ACCEPTED } -> Result.ACCEPTED
         results.values.any { it == Result.NOT_WAITING } -> Result.NOT_WAITING
+        results.values.any { it == Result.BLOCKED } -> Result.BLOCKED
         else -> Result.UNREACHABLE
     }
 

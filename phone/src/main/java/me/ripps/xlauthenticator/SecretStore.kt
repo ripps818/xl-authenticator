@@ -75,7 +75,10 @@ class SecretStore(context: Context) {
         private const val KEY_IPS = "ips"
         private const val KEY_AUTO_PROMPT = "auto_prompt"
 
+        /** Splits the IP field, tolerating `http://` prefixes, `:4646` ports and trailing paths. */
         fun parseIps(text: String): List<String> =
-            text.split(';', ',', ' ', '\n').map { it.trim() }.filter { it.isNotEmpty() }
+            text.split(';', ',', ' ', '\n')
+                .map { it.trim().substringAfter("://").substringBefore('/').substringBefore(':') }
+                .filter { it.isNotEmpty() }
     }
 }

@@ -52,4 +52,12 @@ class SenderTest {
         assertEquals(null, AutoPrompt.parseIpv4("my-pc.local"))
         assertEquals(null, AutoPrompt.parseIpv4("192.168.1.256"))
     }
+
+    @Test
+    fun ipFieldToleratesSchemesAndPorts() {
+        assertEquals(
+            listOf("192.168.1.2", "10.0.0.5", "my-pc"),
+            SecretStore.parseIps("http://192.168.1.2:4646/ ; 10.0.0.5:4646,my-pc"),
+        )
+    }
 }

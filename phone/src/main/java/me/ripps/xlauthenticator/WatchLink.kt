@@ -16,6 +16,7 @@ object WatchLink {
     const val RESULT_NOT_WAITING = "not_waiting"
     const val RESULT_UNREACHABLE = "unreachable"
     const val RESULT_NO_SETUP = "no_setup"
+    const val RESULT_BLOCKED = "blocked"
 
     /** Asks every connected watch to show the "Send code?" prompt. Blocking; call off the main thread. */
     fun promptWatches(context: Context) {
